@@ -47,8 +47,12 @@ def predict_flower(image):
     interpreter.set_tensor(input_details[0]['index'], processed_image)
     interpreter.invoke()
     output_data = interpreter.get_tensor(output_details[0]['index'])
-    flower_class = np.argmax(output_data, axis=1)[0]
-    return int(flower_class)
+    
+    probabilities = output_data[0]  # Get probabilities for all classes
+    flower_class = np.argmax(probabilities)  # Get predicted class
+    probability = float(probabilities[flower_class])  # Get probability of predicted class
+    
+    return int(flower_class), probability
 
 # Define the API endpoint
 @app.get("/predict/")
@@ -66,10 +70,14 @@ async def predict(image_url: str):
             raise HTTPException(status_code=400, detail="Invalid image format")
 
         # Predict the flower
-        flower_class = predict_flower(image)
+        flower_class, probability = predict_flower(image)
         flower_name = flower_labels.get(flower_class, "Unknown")
 
-        return {"flower_class": flower_class, "flower_name": flower_name}
+        return {
+            "flower_class": flower_class,
+            "flower_name": flower_name,
+            "probability": round(probability, 4) * 100  # Rounded for better readability
+        }
     
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch image: {str(e)}")
