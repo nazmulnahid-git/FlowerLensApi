@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 pillow
-numpy
-tensorflow-runtime
+numpy==1.23.5
+tensorflow==2.15.0
 requests
 gunicorn
